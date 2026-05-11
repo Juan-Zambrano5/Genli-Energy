@@ -42,7 +42,7 @@ const CustomTooltip = ({ active, payload, label, darkMode, valueFormatter }) => 
       <p className={`font-bold mb-1 ${darkMode ? "text-slate-200" : "text-slate-700"}`}>{label}</p>
       {payload.map((p) => (
         <p key={p.name} style={{ color: p.color }} className="font-medium">
-          {p.name}: <span className={darkMode ? "text-slate-200" : "text-slate-700"}>{valueFormatter ? valueFormatter(p.value) : p.value} {p.unit || "kWh"}</span>
+          {p.name}: <span className={darkMode ? "text-slate-200" : "text-slate-700"}>{valueFormatter ? valueFormatter(p.value) : p.value}{p.unit === "" ? "" : ` ${p.unit || "kWh"}`}</span>
         </p>
       ))}
     </div>
@@ -122,6 +122,8 @@ export default function Analisis() {
     promedio: z.casas > 0 ? parseFloat((z.perdida / z.casas).toFixed(1)) : 0,
     suministro: z.consumo ?? 0,
   }));
+
+  const getRatioColor = (ratio) => ratio > 50 ? "#ef4444" : ratio > 25 ? "#f97316" : "#10b981";
 
   const porZonaConRatio = porZona.map(z => {
     const cons = z.consumo ?? 0;
@@ -327,8 +329,8 @@ export default function Analisis() {
                 <LineChart data={mensual} margin={{ top: 5, right: 20, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={theme.chartGrid} />
                   <XAxis dataKey="mes" tick={{ fontSize: 12, fill: theme.chartTick }} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: theme.chartTick }} unit="%" />
-                  <Tooltip content={<CustomTooltip darkMode={darkMode} valueFormatter={(v) => Math.round(v * 100) / 100} />} />
+                  <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: theme.chartTick }} tickFormatter={(v) => `${v}%`} />
+                  <Tooltip formatter={(value) => [<span style={{ color: "#000" }}>{Math.round(value)}%</span>, "Eficiencia"]} />
                   <Legend wrapperStyle={{ fontSize: 13, color: theme.chartLegend }} />
                   <Line
                     type="monotone" dataKey="eficiencia" name="Eficiencia"
@@ -425,10 +427,20 @@ export default function Analisis() {
                   <CartesianGrid strokeDasharray="3 3" stroke={theme.chartGrid} />
                   <XAxis dataKey="zona" tick={{ fontSize: 11, fill: theme.chartTick }} />
                   <YAxis tick={{ fontSize: 12, fill: theme.chartTick }} tickFormatter={(v) => `${v}%`} />
-                      <Tooltip formatter={(value) => [`${Math.round(value * 10) / 10}%`, "% Pérdida"]} />
+                          <Tooltip content={({ active, payload, label }) => {
+                        if (!active || !payload?.length) return null;
+                        const value = payload[0]?.value;
+                        const color = getRatioColor(value);
+                        return (
+                          <div className={`border rounded-xl shadow-lg px-4 py-3 text-sm ${darkMode ? "bg-[#1E293B] border-[#334155]" : "bg-white border-slate-100"}`}>
+                            <p className={`font-bold mb-1 ${darkMode ? "text-slate-200" : "text-slate-700"}`}>{label}</p>
+                            <p style={{ color }} className="font-medium">% Pérdida: <span className={darkMode ? "text-slate-200" : "text-slate-700"}>{Math.round(value * 10) / 10}%</span></p>
+                          </div>
+                        );
+                      }} />
                   <Bar dataKey="ratio" name="% Pérdida" radius={[4, 4, 0, 0]}>
                     {porZonaConRatio.map((z, i) => {
-                      const color = z.ratio > 50 ? "#f97316" : z.ratio > 25 ? "#38bdf8" : "#10b981";
+                      const color = getRatioColor(z.ratio);
                       return <Cell key={i} fill={color} />;
                     })}
                   </Bar>
