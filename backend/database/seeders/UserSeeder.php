@@ -10,22 +10,24 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Limpiar caché de permisos
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Crear permisos
-        Permission::create(['name' => 'ver registros']);
-        Permission::create(['name' => 'crear registros']);
-        Permission::create(['name' => 'editar registros']);
-        Permission::create(['name' => 'eliminar registros']);
-        Permission::create(['name' => 'ver estadisticas']);
+        $permissions = [
+            'ver registros',
+            'crear registros',
+            'editar registros',
+            'eliminar registros',
+            'ver estadisticas',
+        ];
 
-        // Crear roles
-        $admin = Role::create(['name' => 'administrador']);
-        $gerente = Role::create(['name' => 'gerente']);
-        $tecnico = Role::create(['name' => 'tecnico']);
+        foreach ($permissions as $permissionName) {
+            Permission::firstOrCreate(['name' => $permissionName]);
+        }
 
-        // Asignar permisos
+        $admin = Role::firstOrCreate(['name' => 'administrador']);
+        $gerente = Role::firstOrCreate(['name' => 'gerente']);
+        $tecnico = Role::firstOrCreate(['name' => 'tecnico']);
+
         $admin->givePermissionTo(Permission::all());
 
         $gerente->givePermissionTo([

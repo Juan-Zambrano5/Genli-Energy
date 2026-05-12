@@ -243,6 +243,7 @@ class GenlienergyController extends Controller
                 $nombre = $item->tipo === 'Tecnica' ? 'Técnica' : ($item->tipo === 'No Tecnica' ? 'No técnica' : $item->tipo);
                 return [
                     'name' => $nombre,
+                    'total' => floatval($item->total),
                     'value' => round((floatval($item->total) / floatval($totales)) * 100, 1)
                 ];
             })

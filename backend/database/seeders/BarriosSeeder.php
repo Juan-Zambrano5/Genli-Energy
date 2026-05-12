@@ -39,7 +39,7 @@ class BarriosSeeder extends Seeder
         ];
 
         foreach ($barrios as $nombre) {
-            Barrio::create(['nombre' => $nombre]);
+            Barrio::firstOrCreate(['nombre' => $nombre]);
         }
     }
 }
